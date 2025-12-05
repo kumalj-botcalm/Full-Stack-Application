@@ -5,46 +5,50 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
+const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const database_1 = require("@/config/database");
 const userRoutes_1 = __importDefault(require("@/routes/userRoutes"));
 const productRoutes_1 = __importDefault(require("@/routes/productRoutes"));
+const auth_1 = __importDefault(require("@/routes/auth"));
+const uploadRoutes_1 = __importDefault(require("@/routes/uploadRoutes"));
 const response_1 = require("@/types/response");
 const app = (0, express_1.default)();
-const PORT = parseInt(process.env.PORT || '5000', 10);
+const PORT = parseInt(process.env.PORT || '3000', 10);
 app.use((0, cors_1.default)({
-    origin: ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:5173'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    origin: (origin, callback) => {
+        if (!origin)
+            return callback(null, true);
+        if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
+            return callback(null, true);
+        }
+        return callback(new Error('Not allowed by CORS'));
+    },
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
 }));
 app.use(express_1.default.json({ limit: '10mb' }));
 app.use(express_1.default.urlencoded({ extended: true, limit: '10mb' }));
+app.use((0, cookie_parser_1.default)());
 app.use((req, res, next) => {
     console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
     next();
 });
-app.get('/health', (req, res) => {
-    res.json({
-        status: 'OK',
-        timestamp: new Date().toISOString(),
-        uptime: process.uptime(),
-        environment: process.env.NODE_ENV || 'development'
-    });
-});
 app.use('/api/users', userRoutes_1.default);
 app.use('/api/products', productRoutes_1.default);
+app.use('/api/auth', auth_1.default);
+app.use('/api/upload', uploadRoutes_1.default);
 app.use((req, res) => {
     res.status(404).json((0, response_1.createErrorResponse)(`Route ${req.method} ${req.originalUrl} not found`, undefined, {
         availableRoutes: [
-            'GET /health',
             'GET /api/users',
             'POST /api/users',
             'PUT /api/users/:id',
             'DELETE /api/users/:id',
             'GET /api/products',
-            'POST /api/products',
-            'PUT /api/products/:id',
-            'DELETE /api/products/:id'
+            'POST /api/auth/register',
+            'POST /api/auth/login',
+            'POST /api/auth/check-email'
         ]
     }));
 });
@@ -59,10 +63,6 @@ async function startServer() {
         console.log('✅ Database connected successfully');
         app.listen(PORT, () => {
             console.log(`🚀 Server running on port ${PORT}`);
-            console.log(`📊 Health check: http://localhost:${PORT}/health`);
-            console.log(`👥 Users API: http://localhost:${PORT}/api/users`);
-            console.log(`🛍️ Products API: http://localhost:${PORT}/api/products`);
-            console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
         });
     }
     catch (error) {

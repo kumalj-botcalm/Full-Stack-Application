@@ -60,11 +60,10 @@ const ProductSchema = new mongoose_1.Schema({
         required: true,
         min: 0
     },
-    inStock: {
-        type: Boolean,
-        required: true,
-        default: true
-    }
+    image: {
+        type: String,
+        required: false
+    },
 }, {
     timestamps: true
 });
@@ -81,23 +80,6 @@ ProductSchema.statics.findByPriceRange = function (minPrice, maxPrice) {
             $lte: maxPrice
         }
     });
-};
-ProductSchema.statics.validateProductData = function (data) {
-    const missing = [];
-    if (!data.name || data.name.trim() === '')
-        missing.push('name');
-    if (!data.description || data.description.trim() === '')
-        missing.push('description');
-    if (!data.category || data.category.trim() === '')
-        missing.push('category');
-    if (data.price === undefined || data.price === null || data.price < 0)
-        missing.push('price');
-    if (data.inStock === undefined || data.inStock === null)
-        missing.push('inStock');
-    return {
-        isValid: missing.length === 0,
-        missing
-    };
 };
 const ProductModel = mongoose_1.default.model('Product', ProductSchema, 'products');
 exports.default = ProductModel;

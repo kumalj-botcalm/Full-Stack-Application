@@ -1,4 +1,4 @@
-import { IUser, IProduct } from './database';
+import { IUser } from './database';
 export declare enum NotificationTypes {
     SUCCESS = "success",
     ERROR = "error",
@@ -20,14 +20,6 @@ export declare class NotificationTemplates {
         NOT_FOUND: () => INotification;
         DUPLICATE_EMAIL: (email: string) => INotification;
         EMAIL_CONFLICT: () => INotification;
-        VALIDATION_ERROR: () => INotification;
-        SERVER_ERROR: (action: string) => INotification;
-    };
-    static readonly PRODUCT: {
-        CREATED: (product: IProduct) => INotification;
-        UPDATED: (product: IProduct) => INotification;
-        DELETED: (product: IProduct) => INotification;
-        NOT_FOUND: () => INotification;
         VALIDATION_ERROR: () => INotification;
         SERVER_ERROR: (action: string) => INotification;
     };

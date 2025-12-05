@@ -8,11 +8,37 @@ const User_1 = __importDefault(require("@/models/User"));
 const database_1 = require("@/config/database");
 const notification_1 = require("@/types/notification");
 const response_1 = require("@/types/response");
+const auth_1 = require("@/middleware/auth");
 const router = express_1.default.Router();
+router.use(auth_1.authenticateToken);
+router.use(auth_1.requireSeller);
 router.get('/', async (req, res) => {
     try {
-        const users = await User_1.default.find({}).sort({ userId: -1 });
-        res.json(users);
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const sortBy = req.query.sortBy || 'userId';
+        const sortOrder = req.query.sortOrder || 'desc';
+        const skip = (page - 1) * limit;
+        const sort = {};
+        sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
+        const totalItems = await User_1.default.countDocuments({});
+        const totalPages = Math.ceil(totalItems / limit);
+        const users = await User_1.default.find({})
+            .sort(sort)
+            .skip(skip)
+            .limit(limit);
+        const pagination = {
+            page,
+            limit,
+            totalItems,
+            totalPages,
+            hasNext: page < totalPages,
+            hasPrevious: page > 1
+        };
+        res.json({
+            users,
+            pagination
+        });
     }
     catch (err) {
         console.error('Error fetching users:', err);
@@ -21,7 +47,7 @@ router.get('/', async (req, res) => {
 });
 router.post('/', async (req, res) => {
     try {
-        const { firstName, lastName, email, birthDate, gender } = req.body;
+        const { firstName, lastName, email, birthDate, gender, image } = req.body;
         const validation = User_1.default.validateUserData(req.body);
         if (!validation.isValid) {
             res.status(400).json((0, response_1.createErrorResponse)('All fields are required', notification_1.NotificationTemplates.USER.VALIDATION_ERROR(), { missing: validation.missing }));
@@ -39,7 +65,8 @@ router.post('/', async (req, res) => {
             lastName: lastName.trim(),
             email: email.toLowerCase().trim(),
             birthDate,
-            gender
+            gender,
+            image: image || undefined
         });
         const savedUser = await newUser.save();
         res.status(201).json((0, response_1.createSuccessResponse)('User created successfully', { user: savedUser }, notification_1.NotificationTemplates.USER.CREATED(savedUser)));
@@ -57,7 +84,7 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
     try {
         const userId = req.params.id;
-        const { firstName, lastName, email, birthDate, gender } = req.body;
+        const { firstName, lastName, email, birthDate, gender, image } = req.body;
         const validation = User_1.default.validateUserData(req.body);
         if (!validation.isValid) {
             res.status(400).json((0, response_1.createErrorResponse)('All fields are required', notification_1.NotificationTemplates.USER.VALIDATION_ERROR(), { missing: validation.missing }));
@@ -76,7 +103,8 @@ router.put('/:id', async (req, res) => {
             lastName: lastName.trim(),
             email: email.toLowerCase().trim(),
             birthDate,
-            gender
+            gender,
+            image: image === null || image === '' ? null : image
         }, { new: true, runValidators: true });
         if (!updatedUser) {
             res.status(404).json((0, response_1.createErrorResponse)('User not found', notification_1.NotificationTemplates.USER.NOT_FOUND()));

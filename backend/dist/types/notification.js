@@ -70,42 +70,4 @@ NotificationTemplates.USER = {
         details: 'An unexpected error occurred on the server'
     })
 };
-NotificationTemplates.PRODUCT = {
-    CREATED: (product) => ({
-        type: NotificationTypes.SUCCESS,
-        title: 'Product Created',
-        message: `Product "${product.name}" created successfully`,
-        details: `Product ID: ${product.productId}`
-    }),
-    UPDATED: (product) => ({
-        type: NotificationTypes.SUCCESS,
-        title: 'Product Updated',
-        message: `Product "${product.name}" updated successfully`,
-        details: `Product ID: ${product.productId}`
-    }),
-    DELETED: (product) => ({
-        type: NotificationTypes.SUCCESS,
-        title: 'Product Deleted',
-        message: `Product "${product.name}" deleted successfully`,
-        details: `Product ID: ${product.productId}`
-    }),
-    NOT_FOUND: () => ({
-        type: NotificationTypes.ERROR,
-        title: 'Product Not Found',
-        message: 'The requested product could not be found',
-        details: 'Please check the product ID and try again'
-    }),
-    VALIDATION_ERROR: () => ({
-        type: NotificationTypes.ERROR,
-        title: 'Validation Error',
-        message: 'Please fill in all required fields',
-        details: 'All fields are required to create or update a product'
-    }),
-    SERVER_ERROR: (action) => ({
-        type: NotificationTypes.ERROR,
-        title: 'Server Error',
-        message: `${action} failed. Please try again later.`,
-        details: 'An unexpected error occurred on the server'
-    })
-};
 //# sourceMappingURL=notification.js.map

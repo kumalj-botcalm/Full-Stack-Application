@@ -34,10 +34,10 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
-const UserSchema = new mongoose_1.Schema({
+const database_1 = require("@/config/database");
+const SystemUserSchema = new mongoose_1.Schema({
     userId: {
         type: Number,
-        required: true,
         unique: true
     },
     firstName: {
@@ -57,33 +57,59 @@ const UserSchema = new mongoose_1.Schema({
         lowercase: true,
         trim: true
     },
+    password: {
+        type: String,
+        required: true,
+        minlength: 6
+    },
     birthDate: {
         type: String,
         required: true
     },
-    gender: {
+    mobileNumber: {
         type: String,
         required: true,
-        enum: ['Male', 'Female', 'Other']
+        trim: true
     },
-    image: {
+    role: {
         type: String,
-        required: false
+        required: true,
+        enum: ['seller', 'customer'],
+        default: 'customer'
+    },
+    isActive: {
+        type: Boolean,
+        default: true
+    },
+    lastLogin: {
+        type: Date,
+        default: null
     }
 }, {
     timestamps: true
 });
-UserSchema.methods.getFullName = function () {
+SystemUserSchema.pre('save', async function (next) {
+    if (this.isNew && !this.userId) {
+        try {
+            this.userId = await (0, database_1.getNextSequence)('system_user_id');
+        }
+        catch (error) {
+            return next(error);
+        }
+    }
+    next();
+});
+SystemUserSchema.methods.getFullName = function () {
     return `${this.firstName} ${this.lastName}`;
 };
-UserSchema.statics.findByEmail = function (email) {
+SystemUserSchema.statics.findByEmail = function (email) {
     return this.findOne({ email: email.toLowerCase() });
 };
-UserSchema.statics.findByUserId = function (userId) {
+SystemUserSchema.statics.findByUserId = function (userId) {
     return this.findOne({ userId });
 };
-UserSchema.statics.validateUserData = function (userData) {
-    const { firstName, lastName, email, birthDate, gender } = userData;
+SystemUserSchema.statics.validateRegistrationData = function (userData) {
+    const { firstName, lastName, email, birthDate, mobileNumber, role } = userData;
     const missing = [];
     if (!firstName || firstName.trim() === '')
         missing.push('firstName');
@@ -93,13 +119,27 @@ UserSchema.statics.validateUserData = function (userData) {
         missing.push('email');
     if (!birthDate)
         missing.push('birthDate');
-    if (!gender)
-        missing.push('gender');
+    if (!mobileNumber || mobileNumber.trim() === '')
+        missing.push('mobileNumber');
+    if (!role || !['seller', 'customer'].includes(role))
+        missing.push('role');
     return {
         isValid: missing.length === 0,
         missing
     };
 };
-const UserModel = mongoose_1.default.model('User', UserSchema, 'users');
-exports.default = UserModel;
-//# sourceMappingURL=User.js.map
+SystemUserSchema.statics.validateLoginData = function (userData) {
+    const { email, password } = userData;
+    const missing = [];
+    if (!email || email.trim() === '')
+        missing.push('email');
+    if (!password || password.trim() === '')
+        missing.push('password');
+    return {
+        isValid: missing.length === 0,
+        missing
+    };
+};
+const SystemUserModel = mongoose_1.default.model('SystemUser', SystemUserSchema, 'System_Users');
+exports.default = SystemUserModel;
+//# sourceMappingURL=SystemUser.js.map

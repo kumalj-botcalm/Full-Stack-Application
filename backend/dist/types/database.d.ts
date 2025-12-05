@@ -6,6 +6,7 @@ export interface IUser extends Document {
     email: string;
     birthDate: string;
     gender: 'Male' | 'Female' | 'Other';
+    image?: string;
     createdAt: Date;
     updatedAt: Date;
     getFullName(): string;
@@ -16,10 +17,25 @@ export interface IProduct extends Document {
     description: string;
     category: string;
     price: number;
-    inStock: boolean;
+    image?: string;
     createdAt: Date;
     updatedAt: Date;
     getFormattedPrice(): string;
+}
+export interface ISystemUser extends Document {
+    userId: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+    birthDate: string;
+    mobileNumber: string;
+    role: 'seller' | 'customer';
+    isActive: boolean;
+    lastLogin: Date | null;
+    createdAt: Date;
+    updatedAt: Date;
+    getFullName(): string;
 }
 export interface ICounter extends Document {
     _id: string;
@@ -31,13 +47,17 @@ export interface IUserInput {
     email: string;
     birthDate: string;
     gender: 'Male' | 'Female' | 'Other';
+    image?: string;
 }
-export interface IProductInput {
-    name: string;
-    description: string;
-    category: string;
-    price: number;
-    inStock: boolean;
+export interface ISystemUserInput {
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+    confirmPassword: string;
+    birthDate: string;
+    mobileNumber: string;
+    role: 'seller' | 'customer';
 }
 export interface IValidationResult {
     isValid: boolean;
